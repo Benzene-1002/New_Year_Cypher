@@ -45,10 +45,9 @@
     <div id="out"></div>
 
     <script>
-      // 1) ここは後で差し替え（暗号文 base64）
-      const CIPHERTEXT_B64 = "REPLACE_ME";
+      const CIPHERTEXT_B64 =
+        "Z2GpvfGuSOabNZMHAPuEQDOySAtpi+h3FxmOK1SZ4uQi55f7BPuJViCXwo+HlA==";
 
-      // 2) salt / iv（暗号文を作ったときと同じにする）
       const SALT = new TextEncoder().encode("newyear_salt_v1");
       const IV = Uint8Array.from([
         12, 45, 88, 201, 34, 76, 99, 18, 54, 210, 77, 6,
@@ -67,7 +66,6 @@
             return;
           }
 
-          // 「答え」→「鍵」へ（直接鍵を入れさせない）
           const cryptoKey = await deriveAesKey(normalized, SALT);
           const plaintext = await decryptAesGcmB64(
             CIPHERTEXT_B64,
@@ -81,9 +79,8 @@
         }
       });
 
-      // 表記ゆれ対策：ここが「謎解き→鍵」の肝
       function normalizeAnswer(s) {
-        // 例：空白削除、全角→半角、大小無視、記号除去など
+        // 空白削除、全角→半角、大小無視、記号除去
         return (s ?? "")
           .trim()
           .toLowerCase()
