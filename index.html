@@ -287,6 +287,26 @@
 
     <div id="out"></div>
 
+    <!-- Success Overlay -->
+    <div id="fxOverlay" class="fx-overlay" aria-hidden="true">
+      <div class="fx-bg"></div>
+
+      <div class="fx-card">
+        <div class="fx-title">DECRYPTED</div>
+        <div id="fxMessage" class="fx-message"></div>
+        <div class="fx-sub">Press any key / click to close</div>
+      </div>
+
+      <canvas id="confetti" class="fx-confetti"></canvas>
+    </div>
+
+    <audio id="fxSound" preload="auto">
+      <source
+        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
+        type="audio/wav"
+      />
+    </audio>
+
     <script>
       const CIPHERTEXT_B64 =
         "Z2GpvfGuSOabNZMHAPuEQDOySAtpi+h3FxmOK1SZ4uQi55f7BPuJViCXwo+HlA==";
@@ -426,6 +446,7 @@
       function hideSuccessFx() {
         fxOverlay.classList.remove("show");
         fxOverlay.setAttribute("aria-hidden", "true");
+        fxMessage.classList.remove("glitch");
         stopConfetti();
       }
 
@@ -533,25 +554,5 @@
         ctx && ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
       }
     </script>
-
-    <!-- Success Overlay -->
-    <div id="fxOverlay" class="fx-overlay" aria-hidden="true">
-      <div class="fx-bg"></div>
-
-      <div class="fx-card">
-        <div class="fx-title">DECRYPTED</div>
-        <div id="fxMessage" class="fx-message"></div>
-        <div class="fx-sub">Press any key / click to close</div>
-      </div>
-
-      <canvas id="confetti" class="fx-confetti"></canvas>
-    </div>
-
-    <audio id="fxSound" preload="auto">
-      <source
-        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
-        type="audio/wav"
-      />
-    </audio>
   </body>
 </html>
