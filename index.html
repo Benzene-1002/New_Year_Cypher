@@ -75,6 +75,163 @@
       .guide ul {
         margin: 6px 0 6px 20px;
       }
+      /* ===== Success FX ===== */
+      .fx-overlay {
+        position: fixed;
+        inset: 0;
+        display: none;
+        z-index: 9999;
+        overflow: hidden;
+      }
+      .fx-overlay.show {
+        display: block;
+      }
+      .fx-bg {
+        position: absolute;
+        inset: -20%;
+        background: radial-gradient(
+            circle at 30% 20%,
+            rgba(126, 231, 135, 0.25),
+            transparent 45%
+          ),
+          radial-gradient(
+            circle at 70% 60%,
+            rgba(31, 111, 235, 0.25),
+            transparent 50%
+          ),
+          radial-gradient(
+            circle at 40% 80%,
+            rgba(255, 190, 11, 0.18),
+            transparent 55%
+          ),
+          rgba(11, 14, 20, 0.92);
+        filter: blur(0px);
+        animation: fxPulse 1.8s ease-in-out infinite;
+      }
+      @keyframes fxPulse {
+        0%,
+        100% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.04);
+        }
+      }
+      .fx-card {
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: min(680px, calc(100vw - 32px));
+        padding: 22px 18px;
+        border-radius: 18px;
+        background: rgba(7, 10, 16, 0.85);
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.55);
+        backdrop-filter: blur(10px);
+        text-align: center;
+      }
+      .fx-title {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        letter-spacing: 0.18em;
+        font-weight: 800;
+        font-size: 14px;
+        opacity: 0.8;
+        margin-bottom: 10px;
+      }
+      .fx-message {
+        font-weight: 900;
+        font-size: clamp(28px, 4.2vw, 52px);
+        line-height: 1.08;
+        letter-spacing: 0.02em;
+        color: #fff;
+        text-shadow: 0 0 22px rgba(126, 231, 135, 0.22);
+        margin: 12px 0 8px;
+        position: relative;
+      }
+
+      /* glitch effect */
+      .fx-message.glitch::before,
+      .fx-message.glitch::after {
+        content: attr(data-text);
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        overflow: hidden;
+        opacity: 0.75;
+      }
+      .fx-message.glitch::before {
+        transform: translate(2px, 0);
+        clip-path: inset(0 0 55% 0);
+        filter: hue-rotate(40deg);
+        animation: glitch1 900ms infinite linear alternate-reverse;
+      }
+      .fx-message.glitch::after {
+        transform: translate(-2px, 0);
+        clip-path: inset(45% 0 0 0);
+        filter: hue-rotate(210deg);
+        animation: glitch2 850ms infinite linear alternate;
+      }
+      @keyframes glitch1 {
+        0% {
+          transform: translate(2px, 0);
+        }
+        100% {
+          transform: translate(5px, -1px);
+        }
+      }
+      @keyframes glitch2 {
+        0% {
+          transform: translate(-2px, 0);
+        }
+        100% {
+          transform: translate(-6px, 1px);
+        }
+      }
+      .fx-sub {
+        margin-top: 10px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        opacity: 0.75;
+      }
+      .fx-confetti {
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+      }
+
+      /* shake */
+      .fx-card.shake {
+        animation: fxShake 550ms ease-out;
+      }
+      @keyframes fxShake {
+        0% {
+          transform: translate(-50%, -50%) scale(0.98);
+        }
+        15% {
+          transform: translate(calc(-50% + 6px), calc(-50% - 4px)) scale(1);
+        }
+        35% {
+          transform: translate(calc(-50% - 7px), calc(-50% + 3px)) scale(1.01);
+        }
+        60% {
+          transform: translate(calc(-50% + 4px), calc(-50% + 2px)) scale(1);
+        }
+        100% {
+          transform: translate(-50%, -50%) scale(1.02);
+        }
+      }
+
+      /* Respect reduced-motion */
+      @media (prefers-reduced-motion: reduce) {
+        .fx-bg,
+        .fx-message.glitch::before,
+        .fx-message.glitch::after,
+        .fx-card.shake {
+          animation: none !important;
+        }
+      }
     </style>
   </head>
   <body>
@@ -113,7 +270,7 @@
             <li>Step 1・2 で得た2つの鍵を使い、<b>Cipher</b>を復号せよ。</li>
           </ul>
 
-          <h3>Step 4：答えを入力</h3>
+          <h3>Insert the Answer!</h3>
           <p>
             復号して得られた
             <b>英字列</b>
@@ -160,6 +317,7 @@
           );
 
           $out.innerHTML = `<div class="msg">${escapeHtml(plaintext)}</div>`;
+          showSuccessFx(plaintext);
         } catch {
           $out.innerHTML = `<div class="err">解読に失敗しました（答えが違う可能性があります）。</div>`;
         }
@@ -225,6 +383,175 @@
             }[c])
         );
       }
+      // ===== Success FX (call on success) =====
+      const fxOverlay = document.getElementById("fxOverlay");
+      const fxMessage = document.getElementById("fxMessage");
+      const fxCanvas = document.getElementById("confetti");
+      const fxSound = document.getElementById("fxSound");
+
+      let confettiRaf = null;
+
+      function showSuccessFx(message) {
+        // overlay on
+        fxOverlay.classList.add("show");
+        fxOverlay.setAttribute("aria-hidden", "false");
+
+        // message + glitch
+        fxMessage.textContent = message;
+        fxMessage.setAttribute("data-text", message);
+        fxMessage.classList.add("glitch");
+
+        // shake card
+        const card = fxOverlay.querySelector(".fx-card");
+        card.classList.remove("shake");
+        // reflow
+        void card.offsetWidth;
+        card.classList.add("shake");
+
+        // optional sound (will be blocked unless user interacted; button click counts)
+        try {
+          fxSound.currentTime = 0;
+          fxSound.play();
+        } catch {}
+
+        // confetti
+        startConfetti(1600);
+
+        // close handlers
+        const close = () => hideSuccessFx();
+        fxOverlay.addEventListener("click", close, { once: true });
+        window.addEventListener("keydown", close, { once: true });
+      }
+
+      function hideSuccessFx() {
+        fxOverlay.classList.remove("show");
+        fxOverlay.setAttribute("aria-hidden", "true");
+        stopConfetti();
+      }
+
+      // ===== Simple confetti =====
+      function startConfetti(durationMs = 1200) {
+        stopConfetti();
+
+        const ctx = fxCanvas.getContext("2d");
+        const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+
+        function resize() {
+          fxCanvas.width = Math.floor(fxOverlay.clientWidth * DPR);
+          fxCanvas.height = Math.floor(fxOverlay.clientHeight * DPR);
+          fxCanvas.style.width = fxOverlay.clientWidth + "px";
+          fxCanvas.style.height = fxOverlay.clientHeight + "px";
+          ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+        }
+        resize();
+
+        const W = () => fxOverlay.clientWidth;
+        const H = () => fxOverlay.clientHeight;
+
+        const pieces = [];
+        const N = 180; // more = more intense
+        for (let i = 0; i < N; i++) {
+          pieces.push({
+            x: Math.random() * W(),
+            y: -20 - Math.random() * H() * 0.6,
+            vx: (Math.random() - 0.5) * 6,
+            vy: 3 + Math.random() * 7,
+            r: 3 + Math.random() * 6,
+            rot: Math.random() * Math.PI,
+            vr: (Math.random() - 0.5) * 0.35,
+            life: 0,
+            ttl: 60 + Math.random() * 90,
+            shape: Math.random() < 0.65 ? "rect" : "circle",
+          });
+        }
+
+        const start = performance.now();
+
+        function tick(now) {
+          ctx.clearRect(0, 0, W(), H());
+
+          // subtle vignette flash
+          const t = Math.min(1, (now - start) / 250);
+          ctx.globalAlpha = 0.18 * (1 - t);
+          ctx.fillRect(0, 0, W(), H());
+          ctx.globalAlpha = 1;
+
+          for (const p of pieces) {
+            p.life += 1;
+            p.x += p.vx;
+            p.y += p.vy;
+            p.rot += p.vr;
+            p.vy += 0.06; // gravity
+
+            // wrap
+            if (p.x < -20) p.x = W() + 20;
+            if (p.x > W() + 20) p.x = -20;
+
+            // draw (no fixed colors: use HSL based on position/time)
+            const hue = (p.x * 0.7 + p.life * 6) % 360;
+            ctx.fillStyle = `hsl(${hue} 90% 60%)`;
+
+            ctx.save();
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rot);
+
+            if (p.shape === "rect") {
+              ctx.fillRect(-p.r, -p.r * 0.6, p.r * 2, p.r * 1.2);
+            } else {
+              ctx.beginPath();
+              ctx.arc(0, 0, p.r * 0.75, 0, Math.PI * 2);
+              ctx.fill();
+            }
+            ctx.restore();
+          }
+
+          // end condition
+          if (now - start < durationMs) {
+            confettiRaf = requestAnimationFrame(tick);
+          } else {
+            stopConfetti();
+          }
+        }
+
+        const onResize = () => resize();
+        window.addEventListener("resize", onResize, { passive: true });
+        fxOverlay._onResize = onResize;
+
+        confettiRaf = requestAnimationFrame(tick);
+      }
+
+      function stopConfetti() {
+        if (confettiRaf) cancelAnimationFrame(confettiRaf);
+        confettiRaf = null;
+
+        if (fxOverlay._onResize) {
+          window.removeEventListener("resize", fxOverlay._onResize);
+          fxOverlay._onResize = null;
+        }
+
+        const ctx = fxCanvas.getContext("2d");
+        ctx && ctx.clearRect(0, 0, fxCanvas.width, fxCanvas.height);
+      }
     </script>
+
+    <!-- Success Overlay -->
+    <div id="fxOverlay" class="fx-overlay" aria-hidden="true">
+      <div class="fx-bg"></div>
+
+      <div class="fx-card">
+        <div class="fx-title">DECRYPTED</div>
+        <div id="fxMessage" class="fx-message"></div>
+        <div class="fx-sub">Press any key / click to close</div>
+      </div>
+
+      <canvas id="confetti" class="fx-confetti"></canvas>
+    </div>
+
+    <audio id="fxSound" preload="auto">
+      <source
+        src="data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAESsAACJWAAACABAAZGF0YQAAAAA="
+        type="audio/wav"
+      />
+    </audio>
   </body>
 </html>
