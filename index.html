@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>謎解き復号</title>
+    <style>
+      body {
+        font-family: system-ui, sans-serif;
+        max-width: 640px;
+        margin: 40px auto;
+        padding: 0 16px;
+      }
+      input,
+      button {
+        width: 100%;
+        padding: 10px;
+        font-size: 16px;
+      }
+      button {
+        margin-top: 10px;
+        cursor: pointer;
+      }
+      .msg {
+        margin-top: 18px;
+        font-size: 22px;
+        font-weight: 700;
+      }
+      .err {
+        margin-top: 18px;
+        color: #b00020;
+      }
+      small {
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>謎解き</h1>
+    <p>答えを入力すると、暗号文が解読されます。</p>
+
+    <input id="answer" placeholder="謎解きの答え" autocomplete="off" />
+    <button id="btn">解読</button>
+
+    <div id="out"></div>
+
+    <script>
+      // 1) ここは後で差し替え（暗号文 base64）
+      const CIPHERTEXT_B64 = "REPLACE_ME";
+
+      // 2) salt / iv（暗号文を作ったときと同じにする）
+      const SALT = new TextEncoder().encode("newyear_salt_v1");
+      const IV = Uint8Array.from([
+        12, 45, 88, 201, 34, 76, 99, 18, 54, 210, 77, 6,
+      ]);
+
+      const $answer = document.getElementById("answer");
+      const $btn = document.getElementById("btn");
+      const $out = document.getElementById("out");
+
+      $btn.addEventListener("click", async () => {
+        $out.textContent = "";
+        try {
+          const normalized = normalizeAnswer($answer.value);
+          if (!normalized) {
+            $out.innerHTML = `<div class="err">答えを入力してください。</div>`;
+            return;
+          }
+
+          // 「答え」→「鍵」へ（直接鍵を入れさせない）
+          const cryptoKey = await deriveAesKey(normalized, SALT);
+          const plaintext = await decryptAesGcmB64(
+            CIPHERTEXT_B64,
+            cryptoKey,
+            IV
+          );
+
+          $out.innerHTML = `<div class="msg">${escapeHtml(plaintext)}</div>`;
+        } catch {
+          $out.innerHTML = `<div class="err">解読に失敗しました（答えが違う可能性があります）。</div>`;
+        }
+      });
+
+      // 表記ゆれ対策：ここが「謎解き→鍵」の肝
+      function normalizeAnswer(s) {
+        // 例：空白削除、全角→半角、大小無視、記号除去など
+        return (s ?? "")
+          .trim()
+          .toLowerCase()
+          .normalize("NFKC")
+          .replace(/\s+/g, "") // スペース全削除
+          .replace(/[！-～]/g, (ch) =>
+            String.fromCharCode(ch.charCodeAt(0) - 0xfee0)
+          ) // 全角記号→半角
+          .replace(/[^\p{L}\p{N}]/gu, ""); // 文字/数字以外を消す（日本語もOK）
+      }
+
+      async function deriveAesKey(passphrase, saltBytes) {
+        const baseKey = await crypto.subtle.importKey(
+          "raw",
+          new TextEncoder().encode(passphrase),
+          "PBKDF2",
+          false,
+          ["deriveKey"]
+        );
+        return crypto.subtle.deriveKey(
+          {
+            name: "PBKDF2",
+            salt: saltBytes,
+            iterations: 150000,
+            hash: "SHA-256",
+          },
+          baseKey,
+          { name: "AES-GCM", length: 256 },
+          false,
+          ["decrypt"]
+        );
+      }
+
+      async function decryptAesGcmB64(cipherB64, cryptoKey, ivBytes) {
+        const cipherBytes = Uint8Array.from(atob(cipherB64), (c) =>
+          c.charCodeAt(0)
+        );
+        const plainBuf = await crypto.subtle.decrypt(
+          { name: "AES-GCM", iv: ivBytes },
+          cryptoKey,
+          cipherBytes
+        );
+        return new TextDecoder().decode(plainBuf);
+      }
+
+      function escapeHtml(s) {
+        return s.replace(
+          /[&<>"']/g,
+          (c) =>
+            ({
+              "&": "&amp;",
+              "<": "&lt;",
+              ">": "&gt;",
+              '"': "&quot;",
+              "'": "&#39;",
+            }[c])
+        );
+      }
+    </script>
+  </body>
+</html>
