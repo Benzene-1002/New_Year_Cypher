@@ -33,10 +33,106 @@
       small {
         color: #666;
       }
+      .guide {
+        margin-bottom: 28px;
+      }
+      .guide details {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        padding: 10px 12px;
+        margin-bottom: 10px;
+        background: #fafafa;
+      }
+      .guide summary {
+        cursor: pointer;
+        font-weight: 600;
+      }
+      .guide-body {
+        margin-top: 12px;
+        line-height: 1.8;
+      }
+      .guide .lead {
+        margin-bottom: 12px;
+      }
+      .guide h3 {
+        margin: 16px 0 6px;
+        font-size: 1.05em;
+      }
+      .guide .cipher {
+        background: #f0f0f0;
+        padding: 10px;
+        font-family: monospace;
+        font-size: 1.05em;
+        letter-spacing: 0.05em;
+      }
+      .guide .note {
+        font-size: 0.9em;
+        color: #555;
+      }
+      .guide .q {
+        margin: 6px 0;
+      }
+      .guide ul {
+        margin: 6px 0 6px 20px;
+      }
     </style>
   </head>
   <body>
     <h1>謎解き</h1>
+
+    <section class="guide">
+      <details open>
+        <summary>🧩 遊び方（クリックで開閉）</summary>
+
+        <div class="guide-body">
+          <p class="lead">
+            このページは <b>謎解き → 古典暗号 → 復号</b> の三段構成です。<br />
+            紙と鉛筆を使って解いてください。
+          </p>
+
+          <h3>Step 0：暗号文</h3>
+          <pre class="cipher">GXXFDGXAAGXDAGDAGAFFGAFDGGFF</pre>
+          <p class="note">※ I と J は同一扱い（J は I として扱う）</p>
+
+          <h3>Step 1：方陣キーを得よ（謎1）</h3>
+          <p class="q">
+            「一年のうち、もっとも多くの人が“同じ言葉”を口にする日」<br />
+            その日に、世界中で使われる英語の言葉を答えよ。
+          </p>
+          <p class="note">形式：英大文字・スペースなし</p>
+
+          <h3>Step 2：転置キーを得よ（謎2）</h3>
+          <p class="q">
+            「正月に食べる、甘いもの」<br />
+            ひらがなをそのままアルファベットに直せ。
+          </p>
+          <p class="note">形式：英大文字・スペースなし</p>
+
+          <h3>Step 3：暗号を解け</h3>
+          <ul>
+            <li>Step 1・2 で得た <b>2つの鍵</b> を使う</li>
+            <li>暗号方式は <b>ADFGX暗号</b></li>
+            <li>転置 → 方陣の順で復号する</li>
+          </ul>
+
+          <h3>Step 4：答えを入力</h3>
+          <p>
+            復号して得られた
+            <b>英字列</b> を、このページ下の入力欄に入力してください。
+          </p>
+        </div>
+      </details>
+
+      <details>
+        <summary>💡 ヒント（詰まったら）</summary>
+        <div class="guide-body">
+          <p><b>ヒント1：</b> 新年の挨拶を英語で。</p>
+          <p><b>ヒント2：</b> 正月に食べる、白くて伸びるもの。</p>
+          <p><b>ヒント3：</b> 暗号文に使われている文字は5種類しかない。</p>
+        </div>
+      </details>
+    </section>
+
     <p>答えを入力すると、暗号文が解読されます。</p>
 
     <input id="answer" placeholder="謎解きの答え" autocomplete="off" />
